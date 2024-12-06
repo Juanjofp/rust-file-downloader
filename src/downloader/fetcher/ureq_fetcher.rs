@@ -20,6 +20,8 @@ impl FileDownloader for UReqFetcher {
 
         match response {
             Ok(response) => {
+                let mime = response.header("Content-Type").map(str::to_string);
+
                 let body = response
                     .into_reader()
                     .bytes()
@@ -29,7 +31,7 @@ impl FileDownloader for UReqFetcher {
                     return Response::invalid_body();
                 };
 
-                Response::ok(body)
+                Response::ok(body, mime)
             }
 
             Err(Status(404, _)) => Response::not_found(),

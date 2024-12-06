@@ -1,24 +1,28 @@
 mod fetcher;
 
-use std::collections::hash_map::DefaultHasher;
-use std::env;
-use std::fs;
-use std::hash::{Hash, Hasher};
-use std::path::{Path, PathBuf};
+use image::ImageReader;
+use itertools::Itertools;
+use std::{
+    collections::hash_map::DefaultHasher,
+    env, fs,
+    hash::{Hash, Hasher},
+    io::Cursor,
+    path::{Path, PathBuf},
+};
 
 use fetcher::UReqFetcher;
 
 #[derive(Debug)]
 pub enum Response {
-    Ok(Vec<u8>),
+    Ok { body: Vec<u8>, mime: Option<String> },
     InvalidBody,
     NotFound,
     NetworkError,
 }
 
 impl Response {
-    pub fn ok(body: Vec<u8>) -> Self {
-        Self::Ok(body)
+    pub fn ok(body: Vec<u8>, mime: Option<String>) -> Self {
+        Self::Ok { body, mime }
     }
 
     pub fn invalid_body() -> Self {
@@ -55,16 +59,11 @@ pub enum DownloadError {
 pub struct Download {
     pub source: String,
     pub file: PathBuf,
-    pub content: Vec<u8>,
 }
 
 impl Download {
-    pub fn new(source: String, file: PathBuf, content: Vec<u8>) -> Self {
-        Self {
-            source,
-            file,
-            content,
-        }
+    pub fn new(source: String, file: PathBuf) -> Self {
+        Self { source, file }
     }
 }
 
@@ -91,18 +90,19 @@ where
             Response::NotFound => Err(DownloadError::NotFound),
             Response::InvalidBody => Err(DownloadError::InvalidBody),
 
-            Response::Ok(body) => {
-                // let extension = self.get_extension(url);
+            Response::Ok { body, mime } => {
+                let extension = self.get_extension(mime, &body);
+
                 let file_name = self.get_hash(url);
 
-                // let file_name_with_extension = format!("{}.{}", file_name, extension);
+                let file_name_with_extension = format!("{}.{}", file_name, extension);
 
-                let file_path = self.path.join(file_name);
+                let file_path = self.path.join(file_name_with_extension);
 
                 std::fs::write(&file_path, &body)
                     .unwrap_or_else(|_| panic!("Error saving file: {:?}", file_path));
 
-                Ok(Download::new(String::from(url), file_path, body))
+                Ok(Download::new(String::from(url), file_path))
             }
         }
     }
@@ -113,17 +113,45 @@ where
         });
     }
 
-    // fn get_extension(&self, url: &str) -> String {
-    //     url.split('/')
-    //         .last()
-    //         .unwrap_or("file.data")
-    //         .split('.')
-    //         .enumerate()
-    //         .last()
-    //         .map(|(i, ext)| if i == 0 { "data" } else { ext })
-    //         .unwrap_or("data")
-    //         .to_string()
-    // }
+    fn get_extension(&self, mime: Option<String>, body: &[u8]) -> String {
+        self.get_extension_from_mimetype(mime)
+            .or_else(|| self.get_extension_from_content(body))
+            .unwrap_or(String::from("dat"))
+    }
+
+    fn get_extension_from_mimetype(&self, mime: Option<String>) -> Option<String> {
+        let mime = mime?;
+
+        let mime_parts = mime.split('/').collect_vec();
+
+        if mime_parts.len() != 2 {
+            return None;
+        }
+
+        let extension = mime_parts[1];
+
+        if extension.is_empty() {
+            return None;
+        }
+
+        Some(extension.to_string())
+    }
+
+    fn get_extension_from_content(&self, body: &[u8]) -> Option<String> {
+        let Ok(reader) = ImageReader::new(Cursor::new(body)).with_guessed_format() else {
+            return None;
+        };
+
+        let format = reader.format()?;
+
+        let extensions = format.extensions_str();
+
+        if extensions.is_empty() {
+            return None;
+        }
+
+        Some(extensions[0].to_string())
+    }
 
     fn get_hash(&self, url: &str) -> String {
         let mut hasher = DefaultHasher::new();
@@ -169,29 +197,6 @@ mod tests {
     use super::{DownloadError, Downloader, MockFetcher, Response};
 
     #[test]
-    fn test_get_extension() {
-        // let downloader = Downloader::new("images");
-
-        // let url = "https://www.rust-lang.org/logos/rust-logo-512x512.png";
-
-        // let extension = downloader.get_extension(url);
-
-        // assert_eq!(extension, "png");
-
-        // let url = "https://www.rust-lang.org/logos/rust-logo-512x512";
-
-        // let extension = downloader.get_extension(url);
-
-        // assert_eq!(extension, "data");
-
-        // let url = "rust-logo-512x512";
-
-        // let extension = downloader.get_extension(url);
-
-        // assert_eq!(extension, "data");
-    }
-
-    #[test]
     fn test_download_file() {
         let url = "https://www.rust-lang.org/logos/rust-logo-512x512.png";
 
@@ -199,7 +204,7 @@ mod tests {
 
         let expected_content = mock_file_content();
 
-        let response = Response::ok(expected_content.clone());
+        let response = Response::ok(expected_content.clone(), Some("image/png".to_string()));
 
         let fetcher = MockFetcher::new(vec![response]);
 
@@ -236,7 +241,7 @@ mod tests {
 
         let expected_content = mock_file_content();
 
-        let response = Response::ok(expected_content.clone());
+        let response = Response::ok(expected_content.clone(), Some("image/png".to_string()));
 
         let fetcher = MockFetcher::new(vec![response]);
 
