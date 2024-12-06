@@ -56,6 +56,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "60b1af1c220855b6ceac025d3f6ecdd2b7c4894bfe9cd9bda4fbb4bc7c0d4cf0"
 
 [[package]]
+name = "file-downloader"
+version = "0.1.0"
+dependencies = [
+ "itertools",
+ "ureq",
+ "url",
+]
+
+[[package]]
 name = "flate2"
 version = "1.0.35"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -222,15 +231,6 @@ checksum = "daca1df1c957320b2cf139ac61e7bd64fed304c5040df000a745aa1de3b4ef71"
 dependencies = [
  "icu_normalizer",
  "icu_properties",
-]
-
-[[package]]
-name = "image-loader"
-version = "0.1.0"
-dependencies = [
- "itertools",
- "ureq",
- "url",
 ]
 
 [[package]]

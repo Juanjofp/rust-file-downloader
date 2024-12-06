@@ -1,3 +1,10 @@
+# File downloader in Rust
+
+## Description
+
+## Sample usage
+
+```rust
 use file_downloader::Downloader;
 
 fn main() {
@@ -10,10 +17,5 @@ fn main() {
     let download = downloader.download(url);
 
     println!("Downloaded file: {:?}", download);
-
-    let url = "https://frontends.udemycdn.com/components/auth/desktop-illustration-step-1-x2.webp";
-
-    let download = downloader.download(url);
-
-    println!("Downloaded file: {:?}", download);
 }
+```
