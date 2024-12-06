@@ -92,12 +92,12 @@ where
             Response::InvalidBody => Err(DownloadError::InvalidBody),
 
             Response::Ok(body) => {
-                let extension = self.get_extension(url);
+                // let extension = self.get_extension(url);
                 let file_name = self.get_hash(url);
 
-                let file_name_with_extension = format!("{}.{}", file_name, extension);
+                // let file_name_with_extension = format!("{}.{}", file_name, extension);
 
-                let file_path = self.path.join(file_name_with_extension);
+                let file_path = self.path.join(file_name);
 
                 std::fs::write(&file_path, &body)
                     .unwrap_or_else(|_| panic!("Error saving file: {:?}", file_path));
@@ -113,17 +113,17 @@ where
         });
     }
 
-    fn get_extension(&self, url: &str) -> String {
-        url.split('/')
-            .last()
-            .unwrap_or("file.data")
-            .split('.')
-            .enumerate()
-            .last()
-            .map(|(i, ext)| if i == 0 { "data" } else { ext })
-            .unwrap_or("data")
-            .to_string()
-    }
+    // fn get_extension(&self, url: &str) -> String {
+    //     url.split('/')
+    //         .last()
+    //         .unwrap_or("file.data")
+    //         .split('.')
+    //         .enumerate()
+    //         .last()
+    //         .map(|(i, ext)| if i == 0 { "data" } else { ext })
+    //         .unwrap_or("data")
+    //         .to_string()
+    // }
 
     fn get_hash(&self, url: &str) -> String {
         let mut hasher = DefaultHasher::new();
@@ -170,25 +170,25 @@ mod tests {
 
     #[test]
     fn test_get_extension() {
-        let downloader = Downloader::new("images");
+        // let downloader = Downloader::new("images");
 
-        let url = "https://www.rust-lang.org/logos/rust-logo-512x512.png";
+        // let url = "https://www.rust-lang.org/logos/rust-logo-512x512.png";
 
-        let extension = downloader.get_extension(url);
+        // let extension = downloader.get_extension(url);
 
-        assert_eq!(extension, "png");
+        // assert_eq!(extension, "png");
 
-        let url = "https://www.rust-lang.org/logos/rust-logo-512x512";
+        // let url = "https://www.rust-lang.org/logos/rust-logo-512x512";
 
-        let extension = downloader.get_extension(url);
+        // let extension = downloader.get_extension(url);
 
-        assert_eq!(extension, "data");
+        // assert_eq!(extension, "data");
 
-        let url = "rust-logo-512x512";
+        // let url = "rust-logo-512x512";
 
-        let extension = downloader.get_extension(url);
+        // let extension = downloader.get_extension(url);
 
-        assert_eq!(extension, "data");
+        // assert_eq!(extension, "data");
     }
 
     #[test]
