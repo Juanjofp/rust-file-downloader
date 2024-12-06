@@ -8,8 +8,6 @@
 use file_downloader::Downloader;
 
 fn main() {
-    println!("Hello, Image-Loader!");
-
     let downloader = Downloader::new("images");
 
     let url = "https://www.rust-lang.org/logos/rust-logo-512x512.png";
