@@ -55,11 +55,16 @@ pub enum DownloadError {
 pub struct Download {
     pub source: String,
     pub file: PathBuf,
+    pub content: Vec<u8>,
 }
 
 impl Download {
-    pub fn new(source: String, file: PathBuf) -> Self {
-        Self { source, file }
+    pub fn new(source: String, file: PathBuf, content: Vec<u8>) -> Self {
+        Self {
+            source,
+            file,
+            content,
+        }
     }
 }
 
@@ -94,10 +99,10 @@ where
 
                 let file_path = self.path.join(file_name_with_extension);
 
-                std::fs::write(&file_path, body)
+                std::fs::write(&file_path, &body)
                     .unwrap_or_else(|_| panic!("Error saving file: {:?}", file_path));
 
-                Ok(Download::new(String::from(url), file_path))
+                Ok(Download::new(String::from(url), file_path, body))
             }
         }
     }
