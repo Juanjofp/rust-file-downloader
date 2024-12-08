@@ -1,3 +1,3 @@
 mod downloader;
 
-pub use downloader::{Download, DownloadError, Downloader};
+pub use downloader::{Download, DownloadError, Downloader, UreqDownloader};

@@ -183,6 +183,8 @@ impl Downloader<UReqFetcher> {
     }
 }
 
+pub type UreqDownloader = Downloader<UReqFetcher>;
+
 #[cfg(test)]
 use fetcher::MockFetcher;
 use url::Url;
